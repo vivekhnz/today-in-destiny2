@@ -57,39 +57,9 @@ resource "aws_s3_bucket" "root_bucket" {
   bucket = local.root_s3_bucket_name
   policy = templatefile("build/templates/s3-policy.json", { bucket = local.root_s3_bucket_name })
   website {
-    redirect_all_requests_to = "http://${local.www_domain_name}"
+    redirect_all_requests_to = "https://${local.www_domain_name}"
   }
   tags = local.common_tags
-}
-
-// Route 53 configuration
-resource "aws_route53_zone" "site_zone" {
-  name = var.domain_name
-  // don't destroy the hosted zone as its nameservers are referenced by the domain registrar
-  lifecycle {
-    prevent_destroy = true
-  }
-  tags = local.common_tags
-}
-resource "aws_route53_record" "www_a" {
-  zone_id = aws_route53_zone.site_zone.zone_id
-  name    = local.www_domain_name
-  type    = "A"
-  alias {
-    name                   = aws_s3_bucket.www_bucket.website_domain
-    zone_id                = aws_s3_bucket.www_bucket.hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-resource "aws_route53_record" "root_a" {
-  zone_id = aws_route53_zone.site_zone.zone_id
-  name    = var.domain_name
-  type    = "A"
-  alias {
-    name                   = aws_s3_bucket.root_bucket.website_domain
-    zone_id                = aws_s3_bucket.root_bucket.hosted_zone_id
-    evaluate_target_health = false
-  }
 }
 
 // SSL certificate
@@ -120,4 +90,128 @@ resource "aws_route53_record" "cert_validation" {
 resource "aws_acm_certificate_validation" "cert_validation" {
   certificate_arn         = aws_acm_certificate.ssl_certificate.arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+}
+
+// CloudFront distributions
+locals {
+  www_s3_origin_id  = "S3-${local.www_s3_bucket_name}"
+  root_s3_origin_id = "S3-${local.root_s3_bucket_name}"
+}
+resource "aws_cloudfront_distribution" "www_s3_distribution" {
+  origin {
+    domain_name = aws_s3_bucket.www_bucket.website_endpoint
+    origin_id   = local.www_s3_origin_id
+    custom_origin_config {
+      http_port              = "80"
+      https_port             = "443"
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    }
+  }
+  aliases = [local.www_domain_name]
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.www_s3_origin_id
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate.ssl_certificate.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2019"
+  }
+
+  tags = local.common_tags
+}
+resource "aws_cloudfront_distribution" "root_s3_distribution" {
+  origin {
+    domain_name = aws_s3_bucket.root_bucket.website_endpoint
+    origin_id   = local.root_s3_origin_id
+    custom_origin_config {
+      http_port              = "80"
+      https_port             = "443"
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    }
+  }
+  aliases = [var.domain_name]
+
+  enabled         = true
+  is_ipv6_enabled = true
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.root_s3_origin_id
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "none"
+      }
+      headers = ["Origin"]
+    }
+    viewer_protocol_policy = "allow-all"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate.ssl_certificate.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2019"
+  }
+
+  tags = local.common_tags
+}
+
+// Route 53 configuration
+resource "aws_route53_zone" "site_zone" {
+  name = var.domain_name
+  lifecycle {
+    // don't destroy the hosted zone as its nameservers are referenced by the domain registrar
+    prevent_destroy = true
+  }
+  tags = local.common_tags
+}
+resource "aws_route53_record" "www_a" {
+  zone_id = aws_route53_zone.site_zone.zone_id
+  name    = local.www_domain_name
+  type    = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.www_s3_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.www_s3_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+resource "aws_route53_record" "root_a" {
+  zone_id = aws_route53_zone.site_zone.zone_id
+  name    = var.domain_name
+  type    = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.root_s3_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.root_s3_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
 }
