@@ -32,7 +32,11 @@ variable "domain_name" {
 }
 
 locals {
-  www_s3_bucket_name = "www.${var.domain_name}"
+  www_domain_name    = "www.${var.domain_name}"
+  www_s3_bucket_name = local.www_domain_name
+  common_tags = {
+    Project = var.domain_name
+  }
 }
 
 provider "aws" {
@@ -47,5 +51,25 @@ resource "aws_s3_bucket" "www_bucket" {
   website {
     index_document = "index.html"
   }
-  tags = {}
+  tags = local.common_tags
+}
+
+resource "aws_route53_zone" "site_zone" {
+  name = var.domain_name
+  // don't destroy the hosted zone as its nameservers are referenced by the domain registrar
+  lifecycle {
+    prevent_destroy = true
+  }
+  tags = local.common_tags
+}
+
+resource "aws_route53_record" "www_a" {
+  zone_id = aws_route53_zone.site_zone.zone_id
+  name    = local.www_domain_name
+  type    = "A"
+  alias {
+    name                   = aws_s3_bucket.www_bucket.website_domain
+    zone_id                = aws_s3_bucket.www_bucket.hosted_zone_id
+    evaluate_target_health = false
+  }
 }
