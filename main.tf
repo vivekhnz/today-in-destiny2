@@ -32,8 +32,9 @@ variable "domain_name" {
 }
 
 locals {
-  www_domain_name    = "www.${var.domain_name}"
-  www_s3_bucket_name = local.www_domain_name
+  www_domain_name     = "www.${var.domain_name}"
+  www_s3_bucket_name  = local.www_domain_name
+  root_s3_bucket_name = var.domain_name
   common_tags = {
     Project = var.domain_name
   }
@@ -43,17 +44,25 @@ provider "aws" {
   region = "us-east-1"
 }
 
+// S3 buckets
 resource "aws_s3_bucket" "www_bucket" {
   bucket = local.www_s3_bucket_name
-  policy = templatefile("build/templates/s3-policy.json", {
-    bucket = local.www_s3_bucket_name
-  })
+  policy = templatefile("build/templates/s3-policy.json", { bucket = local.www_s3_bucket_name })
   website {
     index_document = "index.html"
   }
   tags = local.common_tags
 }
+resource "aws_s3_bucket" "root_bucket" {
+  bucket = local.root_s3_bucket_name
+  policy = templatefile("build/templates/s3-policy.json", { bucket = local.root_s3_bucket_name })
+  website {
+    redirect_all_requests_to = "http://${local.www_domain_name}"
+  }
+  tags = local.common_tags
+}
 
+// Route 53 configuration
 resource "aws_route53_zone" "site_zone" {
   name = var.domain_name
   // don't destroy the hosted zone as its nameservers are referenced by the domain registrar
@@ -62,7 +71,6 @@ resource "aws_route53_zone" "site_zone" {
   }
   tags = local.common_tags
 }
-
 resource "aws_route53_record" "www_a" {
   zone_id = aws_route53_zone.site_zone.zone_id
   name    = local.www_domain_name
@@ -70,6 +78,16 @@ resource "aws_route53_record" "www_a" {
   alias {
     name                   = aws_s3_bucket.www_bucket.website_domain
     zone_id                = aws_s3_bucket.www_bucket.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+resource "aws_route53_record" "root_a" {
+  zone_id = aws_route53_zone.site_zone.zone_id
+  name    = var.domain_name
+  type    = "A"
+  alias {
+    name                   = aws_s3_bucket.root_bucket.website_domain
+    zone_id                = aws_s3_bucket.root_bucket.hosted_zone_id
     evaluate_target_health = false
   }
 }
