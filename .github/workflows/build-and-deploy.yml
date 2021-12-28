@@ -23,6 +23,8 @@ jobs:
         run: yarn build
       - name: Bootstrap Terraform
         shell: pwsh
+        env:
+          AWS_DEFAULT_REGION: ${{ secrets.TERRAFORM_AWS_REGION }}
         run: |
           .\build\bootstrap-terraform.ps1 `
             -StateBucketName '${{ secrets.TERRAFORM_STATE_BUCKET_NAME }}' `
