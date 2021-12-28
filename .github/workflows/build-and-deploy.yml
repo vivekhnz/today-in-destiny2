@@ -36,7 +36,6 @@ jobs:
             -StateBucketName '${{ secrets.TERRAFORM_STATE_BUCKET_NAME }}' `
             -LockStateTableName '${{ secrets.TERRAFORM_LOCK_STATE_TABLE_NAME }}' `
             -AwsRegion '${{ secrets.TERRAFORM_AWS_REGION }}'
-      - run: terraform --version
       - name: Terraform Init
         run: |
           terraform init \
@@ -46,7 +45,7 @@ jobs:
           -input=false
       - name: Terraform Validate
         run: terraform validate
-      - name: Terraform Plan
+      - name: Terraform Apply
         env:
           TF_VAR_domain_name: ${{ secrets.WEBSITE_DOMAIN_NAME }}
-        run: terraform plan
+        run: terraform apply -auto-approve -input=false
