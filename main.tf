@@ -26,11 +26,13 @@ terraform {
   }
 }
 
+// Inputs
 variable "domain_name" {
   type        = string
   description = "The domain name for the website excluding the 'www.' prefix."
 }
 
+// Setup
 locals {
   www_domain_name     = "www.${var.domain_name}"
   www_s3_bucket_name  = local.www_domain_name
@@ -214,4 +216,14 @@ resource "aws_route53_record" "root_a" {
     zone_id                = aws_cloudfront_distribution.root_s3_distribution.hosted_zone_id
     evaluate_target_health = false
   }
+}
+
+// Outputs
+output "website_s3_uri" {
+  value       = "s3://${local.www_s3_bucket_name}"
+  description = "The S3 URI to sync static website content to"
+}
+output "website_cloudfront_distribution_id" {
+  value       = aws_cloudfront_distribution.www_s3_distribution.id
+  description = "The distribution ID of the CloudFront distribution to invalidate after updating static website content"
 }

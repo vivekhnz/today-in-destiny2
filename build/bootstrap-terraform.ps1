@@ -5,6 +5,8 @@ param
     [Parameter(Mandatory=$true)] [string] $AwsRegion
 )
 
+$ErrorActionPreference = 'Stop'
+
 function ConvertTo-AwsJson {
     param
     (
