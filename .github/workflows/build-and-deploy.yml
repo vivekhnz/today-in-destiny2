@@ -21,6 +21,12 @@ jobs:
       - name: Build
         working-directory: ./app
         run: yarn build
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Bootstrap Terraform
         shell: pwsh
         env:
