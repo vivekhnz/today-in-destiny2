@@ -49,3 +49,9 @@ jobs:
         env:
           TF_VAR_domain_name: ${{ secrets.WEBSITE_DOMAIN_NAME }}
         run: terraform apply -auto-approve -input=false
+      - name: Deploy
+        shell: pwsh
+        run: |
+          .\build\deploy.ps1 `
+            -WebsiteS3Uri (terraform output -raw website_s3_uri) `
+            -WebsiteCloudFrontDistributionId (terraform output -raw website_cloudfront_distribution_id)
