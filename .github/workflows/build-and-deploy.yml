@@ -1,0 +1,23 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Dependencies
+        working-directory: ./app
+        run: yarn install --frozen-lockfile --prefer-offline
+      - name: Build
+        working-directory: ./app
+        run: yarn build
