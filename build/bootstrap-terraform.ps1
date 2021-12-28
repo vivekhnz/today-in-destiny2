@@ -1,8 +1,8 @@
 param
 (
-    [Parameter(Mandatory=$true)] [string] $StateBucketName,
-    [Parameter(Mandatory=$true)] [string] $LockStateTableName,
-    [Parameter(Mandatory=$true)] [string] $AwsRegion
+    [Parameter(Mandatory = $true)] [string] $StateBucketName,
+    [Parameter(Mandatory = $true)] [string] $LockStateTableName,
+    [Parameter(Mandatory = $true)] [string] $AwsRegion
 )
 
 $ErrorActionPreference = 'Stop'

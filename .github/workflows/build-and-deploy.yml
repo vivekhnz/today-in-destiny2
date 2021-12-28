@@ -21,3 +21,10 @@ jobs:
       - name: Build
         working-directory: ./app
         run: yarn build
+      - name: Bootstrap Terraform
+        shell: pwsh
+        run: |
+          .\build\bootstrap-terraform.ps1 `
+            -StateBucketName '${{ secrets.TERRAFORM_STATE_BUCKET_NAME }}' `
+            -LockStateTableName '${{ secrets.TERRAFORM_LOCK_STATE_TABLE_NAME }}' `
+            -AwsRegion '${{ secrets.TERRAFORM_AWS_REGION }}'
