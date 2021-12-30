@@ -112,6 +112,8 @@ resource "aws_s3_bucket_object" "data_index_html" {
   key    = "index.html"
   source = "data/index.html"
   etag   = filemd5("data/index.html")
+
+  depends_on = [aws_s3_bucket.data_bucket]
 }
 resource "aws_s3_bucket_object" "data_d2_folder" {
   bucket       = local.data_s3_bucket_name
@@ -121,12 +123,16 @@ resource "aws_s3_bucket_object" "data_d2_folder" {
     // don't destroy the folder as other services will upload files into it
     prevent_destroy = true
   }
+
+  depends_on = [aws_s3_bucket.data_bucket]
 }
 resource "aws_s3_bucket_object" "data_d2_today_json" {
   bucket = local.data_s3_bucket_name
   key    = "d2/today.json"
   source = "data/d2/today.json"
   etag   = filemd5("data/d2/today.json")
+
+  depends_on = [aws_s3_bucket.data_d2_folder]
 }
 
 // CloudFront distributions
