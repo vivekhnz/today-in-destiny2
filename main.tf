@@ -132,7 +132,7 @@ resource "aws_s3_bucket_object" "data_d2_today_json" {
   source = "data/d2/today.json"
   etag   = filemd5("data/d2/today.json")
 
-  depends_on = [aws_s3_bucket.data_d2_folder]
+  depends_on = [aws_s3_bucket_object.data_d2_folder]
 }
 
 // CloudFront distributions
