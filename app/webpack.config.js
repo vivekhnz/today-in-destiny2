@@ -13,6 +13,13 @@ module.exports = {
             {
                 test: /\.[jt]sx?$/,
                 use: 'babel-loader'
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    'style-loader',
+                    'css-loader'
+                ]
             }
         ]
     },

@@ -1,0 +1,16 @@
+body {
+    font-family: sans-serif;
+}
+table.activityCategoryTables {
+    border-spacing: 0;
+}
+table.activityCategoryTables tr.categoryHeader {
+    background-color: #ccc;
+    font-size: 24px;
+}
+table.activityCategoryTables td {
+    border: 1px solid black;
+    vertical-align: top;
+    padding: 4px;
+    white-space: pre;
+}
