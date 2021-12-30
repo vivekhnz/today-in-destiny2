@@ -84,6 +84,12 @@ resource "aws_s3_bucket" "www_bucket" {
   website {
     index_document = "index.html"
   }
+  cors_rule {
+    allowed_headers = ["Authorization", "Content-Length"]
+    allowed_methods = ["GET", "POST"]
+    allowed_origins = ["https://www.${var.domain_name}"]
+    max_age_seconds = 3000
+  }
   tags = local.common_tags
 }
 resource "aws_s3_bucket" "root_bucket" {
@@ -104,6 +110,12 @@ resource "aws_s3_bucket" "data_bucket" {
   policy = templatefile("build/templates/s3-policy.json", { bucket = local.data_s3_bucket_name })
   website {
     index_document = "index.html"
+  }
+  cors_rule {
+    allowed_headers = ["Authorization", "Content-Length"]
+    allowed_methods = ["GET", "POST"]
+    allowed_origins = ["https://www.${var.domain_name}"]
+    max_age_seconds = 3000
   }
   tags = local.common_tags
 }
