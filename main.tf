@@ -181,6 +181,11 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
       cookies {
         forward = "none"
       }
+      headers = [
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+      ]
     }
     viewer_protocol_policy = "redirect-to-https"
   }
@@ -224,7 +229,11 @@ resource "aws_cloudfront_distribution" "root_s3_distribution" {
       cookies {
         forward = "none"
       }
-      headers = ["Origin"]
+      headers = [
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+      ]
     }
     viewer_protocol_policy = "allow-all"
   }
@@ -269,6 +278,11 @@ resource "aws_cloudfront_distribution" "data_s3_distribution" {
       cookies {
         forward = "none"
       }
+      headers = [
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+      ]
     }
     viewer_protocol_policy = "redirect-to-https"
   }
