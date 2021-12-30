@@ -108,10 +108,11 @@ resource "aws_s3_bucket" "data_bucket" {
   tags = local.common_tags
 }
 resource "aws_s3_bucket_object" "data_index_html" {
-  bucket = local.data_s3_bucket_name
-  key    = "index.html"
-  source = "data/index.html"
-  etag   = filemd5("data/index.html")
+  bucket       = local.data_s3_bucket_name
+  key          = "index.html"
+  source       = "data/index.html"
+  content_type = "text/html"
+  etag         = filemd5("data/index.html")
 
   depends_on = [aws_s3_bucket.data_bucket]
 }
@@ -127,10 +128,11 @@ resource "aws_s3_bucket_object" "data_d2_folder" {
   depends_on = [aws_s3_bucket.data_bucket]
 }
 resource "aws_s3_bucket_object" "data_d2_today_json" {
-  bucket = local.data_s3_bucket_name
-  key    = "d2/today.json"
-  source = "data/d2/today.json"
-  etag   = filemd5("data/d2/today.json")
+  bucket       = local.data_s3_bucket_name
+  key          = "d2/today.json"
+  source       = "data/d2/today.json"
+  content_type = "application/json"
+  etag         = filemd5("data/d2/today.json")
 
   depends_on = [aws_s3_bucket_object.data_d2_folder]
 }
