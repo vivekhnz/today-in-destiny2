@@ -325,3 +325,7 @@ output "website_cloudfront_distribution_id" {
   value       = aws_cloudfront_distribution.www_s3_distribution.id
   description = "The distribution ID of the CloudFront distribution to invalidate after updating static website content"
 }
+output "data_source_uri" {
+  value       = "https://data.${var.domain_name}"
+  description = "The URI of the website that hosts JSON data files"
+}

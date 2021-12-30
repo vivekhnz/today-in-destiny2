@@ -35,5 +35,11 @@ module.exports = {
         minimizer: [
             new TerserPlugin({ extractComments: false })
         ]
+    },
+    devServer: {
+        static: {
+            directory: path.resolve(__dirname, '../data'),
+            publicPath: '/__data'
+        }
     }
 }

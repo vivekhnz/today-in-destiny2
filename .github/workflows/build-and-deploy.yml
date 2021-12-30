@@ -54,4 +54,5 @@ jobs:
         run: |
           .\build\deploy.ps1 `
             -WebsiteS3Uri (terraform output -raw website_s3_uri) `
-            -WebsiteCloudFrontDistributionId (terraform output -raw website_cloudfront_distribution_id)
+            -WebsiteCloudFrontDistributionId (terraform output -raw website_cloudfront_distribution_id) `
+            -DataSourceUri (terraform output -raw data_source_uri)
