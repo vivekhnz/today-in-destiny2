@@ -37,7 +37,7 @@ jobs:
       - name: Build Tasks Docker Image
         shell: pwsh
         run: |
-          $imageNameTag = .\build\build-tasks-image.ps1
+          $imageNameTag = .\build\build-tasks-image.ps1 -BuildVersion $env:BUILD_VERSION
           "DOCKER_IMAGE_NAME_TAG=$imageNameTag" | Out-File -FilePath $env:GITHUB_ENV -Append
           & docker image ls
       - name: Bootstrap Terraform
