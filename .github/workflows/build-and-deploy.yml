@@ -15,6 +15,16 @@ jobs:
           node-version: 16.x
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Calculate Build Version
+        shell: pwsh
+        run: |
+          $buildVersion = .\build\get-build-version.ps1
+          $buildVersion | Out-File -FilePath $env:GITHUB_ENV "BUILD_VERSION=$buildVersion" -Append
+      - name: Print Build Version
+        shell: pwsh
+        run: |
+          Write-Output "Build Version (from GitHub var): ${{ env.BUILD_VERSION }}"
+          Write-Output "Build Version (from pwsh env): $env:BUILD_VERSION"
       - name: Install Dependencies
         working-directory: ./app
         run: yarn install --frozen-lockfile --prefer-offline
