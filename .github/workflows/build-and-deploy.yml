@@ -15,11 +15,13 @@ jobs:
           node-version: 16.x
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Calculate Build Version
         shell: pwsh
         run: |
           $buildVersion = .\build\get-build-version.ps1
-          $buildVersion | Out-File -FilePath $env:GITHUB_ENV "BUILD_VERSION=$buildVersion" -Append
+          "BUILD_VERSION=$buildVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: Print Build Version
         shell: pwsh
         run: |
