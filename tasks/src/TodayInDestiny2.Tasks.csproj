@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AWSProjectType>Lambda</AWSProjectType>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="Amazon.Lambda.Core.LambdaSerializer">
+      <_Parameter1>Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer</_Parameter1>
+      <_Parameter1_TypeName>System.Type</_Parameter1_TypeName>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>
