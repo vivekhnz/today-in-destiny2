@@ -22,11 +22,6 @@ jobs:
         run: |
           $buildVersion = .\build\get-build-version.ps1
           "BUILD_VERSION=$buildVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
-      - name: Print Build Version
-        shell: pwsh
-        run: |
-          Write-Output "Build Version (from GitHub var): ${{ env.BUILD_VERSION }}"
-          Write-Output "Build Version (from pwsh env): $env:BUILD_VERSION"
       - name: Install Dependencies
         working-directory: ./app
         run: yarn install --frozen-lockfile --prefer-offline
@@ -39,6 +34,12 @@ jobs:
           aws-region: us-east-1
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Build Tasks Docker Image
+        shell: pwsh
+        run: |
+          $imageNameTag = .\build\build-tasks-image.ps1
+          "DOCKER_IMAGE_NAME_TAG=$imageNameTag" | Out-File -FilePath $env:GITHUB_ENV -Append
+          & docker image ls
       - name: Bootstrap Terraform
         shell: pwsh
         env:
