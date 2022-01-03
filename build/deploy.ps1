@@ -4,7 +4,8 @@ param
     [Parameter(Mandatory = $true)] [string] $WebsiteCloudFrontDistributionId,
     [Parameter(Mandatory = $true)] [string] $DataSourceUri,
     [Parameter(Mandatory = $true)] [string] $TasksContainerRepoUri,
-    [Parameter(Mandatory = $true)] [string] $DockerImageNameTag
+    [Parameter(Mandatory = $true)] [string] $DockerImageNameTag,
+    [Parameter(Mandatory = $true)] [string] $TestLambdaFunctionArn
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,3 +37,8 @@ Write-Host "  Remote : $remoteImageNameTag"
 & aws ecr get-login-password | docker login --username AWS --password-stdin $repoHost
 & docker tag $DockerImageNameTag $remoteImageNameTag
 & docker push $remoteImageNameTag
+
+Write-Host "Updating Lambda function to use new container image..."
+& aws lambda update-function-code `
+    --function-name $TestLambdaFunctionArn `
+    --image-uri $remoteImageNameTag

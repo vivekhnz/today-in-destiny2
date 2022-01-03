@@ -18,6 +18,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 3.0"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "3.1.0"
+    }
   }
 
   backend "s3" {
@@ -73,7 +77,7 @@ resource "aws_acm_certificate_validation" "cert_validation" {
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
 }
 
-// static website S3 buckets
+// Static website S3 buckets
 locals {
   www_s3_bucket_name  = "www.${var.domain_name}"
   root_s3_bucket_name = var.domain_name
@@ -373,6 +377,61 @@ resource "aws_ecr_lifecycle_policy" "tasks_repo_policy" {
 EOF
 }
 
+// Push a dummy Docker image into ECR that our Lambda functions can use
+// We'll swap out the image URI later on as part of deployment
+resource "null_resource" "dummy_container_image" {
+  provisioner "local-exec" {
+    interpreter = [
+      "pwsh",
+      "-Command"
+    ]
+    command = <<EOF
+./build/push-dummy-image.ps1 `
+  -RepoName ${aws_ecr_repository.tasks_repo.name} `
+  -RepoUri ${aws_ecr_repository.tasks_repo.repository_url}
+EOF
+  }
+}
+
+// Lambda function for testing purposes
+resource "aws_iam_role" "test_lambda_role" {
+  name = "role.TestLambda"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_lambda_function" "test_lambda" {
+  function_name = "TestLambda"
+  role          = aws_iam_role.test_lambda_role.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.tasks_repo.repository_url}:dummy"
+  layers        = []
+  image_config {
+    entry_point = ["TodayInDestiny2.Tasks::TodayInDestiny2.Tasks.Function::FunctionHandler"]
+  }
+
+  tags       = local.common_tags
+  depends_on = [null_resource.dummy_container_image]
+
+  lifecycle {
+    // the deploy process will update the image URI so don't let Terraform reset it back to the dummy image
+    ignore_changes = [image_uri]
+  }
+}
+
 // Outputs
 output "website_s3_uri" {
   value       = "s3://${local.www_s3_bucket_name}"
@@ -389,4 +448,8 @@ output "data_source_uri" {
 output "tasks_container_repo_uri" {
   value       = aws_ecr_repository.tasks_repo.repository_url
   description = "The URI of the repository that hosts container images for tasks"
+}
+output "test_lambda_function_arn" {
+  value       = aws_lambda_function.test_lambda.arn
+  description = "The ARN of the test lambda function"
 }
