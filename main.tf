@@ -365,7 +365,7 @@ resource "aws_ecr_lifecycle_policy" "tasks_repo_policy" {
             "description": "Keep 1 dummy image",
             "selection": {
                 "tagStatus": "tagged",
-                "tagPrefixList": ["dummy"]
+                "tagPrefixList": ["dummy"],
                 "countType": "imageCountMoreThan",
                 "countNumber": 1
             },
