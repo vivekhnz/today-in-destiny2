@@ -29,10 +29,10 @@ Write-Host "Invalidating CloudFront distribution..."
 
 $tag = $DockerImageNameTag.Substring($DockerImageNameTag.LastIndexOf(':') + 1)
 $remoteImageNameTag = "$($TasksContainerRepoUri):$tag"
+$repoHost = $TasksContainerRepoUri.Substring(0, $TasksContainerRepoUri.IndexOf('/'))
 Write-Host "Pushing tasks container image..."
 Write-Host "  Local  : $DockerImageNameTag"
 Write-Host "  Remote : $remoteImageNameTag"
-
-& aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+& aws ecr get-login-password | docker login --username AWS --password-stdin $repoHost
 & docker tag $DockerImageNameTag $remoteImageNameTag
 & docker push $remoteImageNameTag

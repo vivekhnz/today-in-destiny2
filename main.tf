@@ -342,9 +342,35 @@ resource "aws_route53_record" "data_a" {
   }
 }
 
-// Public ECR repository to host container images
-resource "aws_ecrpublic_repository" "tasks_repo" {
-  repository_name = "today-in-destiny2-tasks"
+// Private ECR repository to host container images
+resource "aws_ecr_repository" "tasks_repo" {
+  name                 = "today-in-destiny2-tasks"
+  image_tag_mutability = "MUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+resource "aws_ecr_lifecycle_policy" "tasks_repo_policy" {
+  repository = aws_ecr_repository.tasks_repo.name
+
+  policy = <<EOF
+{
+    "rules": [
+        {
+            "rulePriority": 1,
+            "description": "Keep last 2 images",
+            "selection": {
+                "tagStatus": "any",
+                "countType": "imageCountMoreThan",
+                "countNumber": 2
+            },
+            "action": {
+                "type": "expire"
+            }
+        }
+    ]
+}
+EOF
 }
 
 // Outputs
@@ -361,6 +387,6 @@ output "data_source_uri" {
   description = "The URI of the website that hosts JSON data files"
 }
 output "tasks_container_repo_uri" {
-  value       = aws_ecrpublic_repository.tasks_repo.repository_uri
+  value       = aws_ecr_repository.tasks_repo.repository_url
   description = "The URI of the repository that hosts container images for tasks"
 }
