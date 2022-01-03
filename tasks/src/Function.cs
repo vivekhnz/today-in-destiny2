@@ -7,7 +7,7 @@ namespace TodayInDestiny2.Tasks;
 
 public class Function
 {
-    public void FunctionHandler(Stream stream, ILambdaContext ctx)
+    public void TestLambdaHandler(Stream stream, ILambdaContext ctx)
     {
         Console.WriteLine("Hello from Lambda!");
 

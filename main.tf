@@ -433,7 +433,7 @@ resource "aws_lambda_function" "test_lambda" {
   image_uri     = "${aws_ecr_repository.tasks_repo.repository_url}:dummy"
   layers        = []
   image_config {
-    entry_point = ["TodayInDestiny2.Tasks::TodayInDestiny2.Tasks.Function::FunctionHandler"]
+    command = ["TodayInDestiny2.Tasks::TodayInDestiny2.Tasks.Function::TestLambdaHandler"]
   }
 
   tags       = local.common_tags
