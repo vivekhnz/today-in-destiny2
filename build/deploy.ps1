@@ -2,7 +2,9 @@ param
 (
     [Parameter(Mandatory = $true)] [string] $WebsiteS3Uri,
     [Parameter(Mandatory = $true)] [string] $WebsiteCloudFrontDistributionId,
-    [Parameter(Mandatory = $true)] [string] $DataSourceUri
+    [Parameter(Mandatory = $true)] [string] $DataSourceUri,
+    [Parameter(Mandatory = $true)] [string] $TasksContainerRepoUri,
+    [Parameter(Mandatory = $true)] [string] $DockerImageNameTag
 )
 
 $ErrorActionPreference = 'Stop'
@@ -24,3 +26,13 @@ Write-Host "Invalidating CloudFront distribution..."
 & aws cloudfront create-invalidation `
     --distribution-id $WebsiteCloudFrontDistributionId `
     --paths "/*"
+
+$tag = $DockerImageNameTag.Substring($DockerImageNameTag.LastIndexOf(':') + 1)
+$remoteImageNameTag = "$($TasksContainerRepoUri):$tag"
+Write-Host "Pushing tasks container image..."
+Write-Host "  Local  : $DockerImageNameTag"
+Write-Host "  Remote : $remoteImageNameTag"
+
+& aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+& docker tag $DockerImageNameTag $remoteImageNameTag
+& docker push $remoteImageNameTag

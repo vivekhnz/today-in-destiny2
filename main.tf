@@ -342,6 +342,11 @@ resource "aws_route53_record" "data_a" {
   }
 }
 
+// Public ECR repository to host container images
+resource "aws_ecrpublic_repository" "tasks_repo" {
+  repository_name = "today-in-destiny2-tasks"
+}
+
 // Outputs
 output "website_s3_uri" {
   value       = "s3://${local.www_s3_bucket_name}"
@@ -354,4 +359,8 @@ output "website_cloudfront_distribution_id" {
 output "data_source_uri" {
   value       = "https://data.${var.domain_name}"
   description = "The URI of the website that hosts JSON data files"
+}
+output "tasks_container_repo_uri" {
+  value       = aws_ecrpublic_repository.tasks_repo.repository_uri
+  description = "The URI of the repository that hosts container images for tasks"
 }

@@ -39,7 +39,6 @@ jobs:
         run: |
           $imageNameTag = .\build\build-tasks-image.ps1 -BuildVersion $env:BUILD_VERSION
           "DOCKER_IMAGE_NAME_TAG=$imageNameTag" | Out-File -FilePath $env:GITHUB_ENV -Append
-          & docker image ls
       - name: Bootstrap Terraform
         shell: pwsh
         env:
@@ -68,4 +67,6 @@ jobs:
           .\build\deploy.ps1 `
             -WebsiteS3Uri (terraform output -raw website_s3_uri) `
             -WebsiteCloudFrontDistributionId (terraform output -raw website_cloudfront_distribution_id) `
-            -DataSourceUri (terraform output -raw data_source_uri)
+            -DataSourceUri (terraform output -raw data_source_uri) `
+            -TasksContainerRepoUri (terraform output -raw tasks_container_repo_uri) `
+            -DockerImageNameTag $env:DOCKER_IMAGE_NAME_TAG
