@@ -441,7 +441,7 @@ resource "aws_lambda_function" "test_lambda" {
   image_uri     = "${aws_ecr_repository.tasks_repo.repository_url}:dummy"
   layers        = []
   image_config {
-    command = ["TodayInDestiny2.Tasks::TodayInDestiny2.Tasks.Function::TestLambdaHandler"]
+    command = ["TodayInDestiny2.Tasks::TodayInDestiny2.Tasks.LamdaEntryPoints::RefreshCurrentActivitiesHandler"]
   }
 
   depends_on = [

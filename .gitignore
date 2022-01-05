@@ -3,3 +3,5 @@ app/node_modules
 app/dist
 tasks/src/bin
 tasks/src/obj
+tasks/wrapper/bin
+tasks/wrapper/obj

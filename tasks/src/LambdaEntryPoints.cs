@@ -5,9 +5,9 @@ using Amazon.Lambda.Core;
 
 namespace TodayInDestiny2.Tasks;
 
-public class Function
+public class LambdaEntryPoints
 {
-    public void TestLambdaHandler(Stream stream, ILambdaContext ctx)
+    public void RefreshCurrentActivitiesHandler(Stream stream, ILambdaContext ctx)
     {
         Console.WriteLine("Hello from Lambda!");
 
@@ -18,5 +18,7 @@ public class Function
         Console.WriteLine($"Time remaining: {ctx.RemainingTime}");
         Console.WriteLine($"CloudWatch log stream name: {ctx.LogStreamName}");
         Console.WriteLine($"CloudWatch log group name: {ctx.LogGroupName}");
+
+        RefreshCurrentActivitiesFunction.RefreshCurrentActivities();
     }
 }
