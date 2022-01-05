@@ -424,7 +424,10 @@ resource "aws_iam_policy" "test_lambda_policy" {
     Statement = [
       {
         Action   = ["logs:CreateLogStream", "logs:PutLogEvents"],
-        Resource = aws_cloudwatch_log_group.test_lambda_logs.arn,
+        Resource = [
+          aws_cloudwatch_log_group.test_lambda_logs.arn,
+          "${aws_cloudwatch_log_group.test_lambda_logs.arn}:*"
+        ],
         Effect   = "Allow"
       }
     ]
