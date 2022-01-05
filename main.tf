@@ -37,14 +37,13 @@ variable "domain_name" {
 }
 
 // Setup
-locals {
-  common_tags = {
-    Project = var.domain_name
-  }
-}
-
 provider "aws" {
   region = "us-east-1"
+  default_tags {
+    tags = {
+      Project = var.domain_name
+    }
+  }
 }
 
 // SSL certificate
@@ -55,7 +54,6 @@ resource "aws_acm_certificate" "ssl_certificate" {
   lifecycle {
     create_before_destroy = true
   }
-  tags = local.common_tags
 }
 resource "aws_route53_record" "cert_validation" {
   for_each = {
@@ -94,7 +92,6 @@ resource "aws_s3_bucket" "www_bucket" {
     allowed_origins = ["https://www.${var.domain_name}"]
     max_age_seconds = 3000
   }
-  tags = local.common_tags
 }
 resource "aws_s3_bucket" "root_bucket" {
   bucket = local.root_s3_bucket_name
@@ -102,7 +99,6 @@ resource "aws_s3_bucket" "root_bucket" {
   website {
     redirect_all_requests_to = "https://www.${var.domain_name}"
   }
-  tags = local.common_tags
 }
 
 // S3 bucket to store data
@@ -121,7 +117,6 @@ resource "aws_s3_bucket" "data_bucket" {
     allowed_origins = ["https://www.${var.domain_name}"]
     max_age_seconds = 3000
   }
-  tags = local.common_tags
 }
 resource "aws_s3_bucket_object" "data_index_html" {
   bucket       = local.data_s3_bucket_name
@@ -205,8 +200,6 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2019"
   }
-
-  tags = local.common_tags
 }
 resource "aws_cloudfront_distribution" "root_s3_distribution" {
   origin {
@@ -253,8 +246,6 @@ resource "aws_cloudfront_distribution" "root_s3_distribution" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2019"
   }
-
-  tags = local.common_tags
 }
 resource "aws_cloudfront_distribution" "data_s3_distribution" {
   origin {
@@ -302,8 +293,6 @@ resource "aws_cloudfront_distribution" "data_s3_distribution" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2019"
   }
-
-  tags = local.common_tags
 }
 
 // Route 53 configuration
@@ -313,7 +302,6 @@ resource "aws_route53_zone" "site_zone" {
     // don't destroy the hosted zone as its nameservers are referenced by the domain registrar
     prevent_destroy = true
   }
-  tags = local.common_tags
 }
 resource "aws_route53_record" "www_a" {
   zone_id = aws_route53_zone.site_zone.zone_id
@@ -357,37 +345,35 @@ resource "aws_ecr_repository" "tasks_repo" {
 resource "aws_ecr_lifecycle_policy" "tasks_repo_policy" {
   repository = aws_ecr_repository.tasks_repo.name
 
-  policy = <<EOF
-{
-    "rules": [
-        {
-            "rulePriority": 1,
-            "description": "Keep 1 dummy image",
-            "selection": {
-                "tagStatus": "tagged",
-                "tagPrefixList": ["dummy"],
-                "countType": "imageCountMoreThan",
-                "countNumber": 1
-            },
-            "action": {
-                "type": "expire"
-            }
-        },
-        {
-            "rulePriority": 2,
-            "description": "Keep last 3 images",
-            "selection": {
-                "tagStatus": "any",
-                "countType": "imageCountMoreThan",
-                "countNumber": 3
-            },
-            "action": {
-                "type": "expire"
-            }
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Keep 1 dummy image"
+        selection = {
+          tagStatus     = "tagged"
+          tagPrefixList = ["dummy"]
+          countType     = "imageCountMoreThan"
+          countNumber   = 1
         }
+        action = {
+          type = "expire"
+        }
+      },
+      {
+        rulePriority = 2
+        description  = "Keep last 3 images"
+        selection = {
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
+          countNumber = 3
+        }
+        action = {
+          type = "expire"
+        }
+      }
     ]
-}
-EOF
+  })
 }
 
 // Push a dummy Docker image into ECR that our Lambda functions can use
@@ -407,27 +393,49 @@ EOF
 }
 
 // Lambda function for testing purposes
-resource "aws_iam_role" "test_lambda_role" {
-  name = "role.TestLambda"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+locals {
+  test_lambda_name = "TestLambda"
 }
-EOF
+resource "aws_cloudwatch_log_group" "test_lambda_logs" {
+  name              = "/aws/lambda/${local.test_lambda_name}"
+  retention_in_days = 14
+}
+resource "aws_iam_role" "test_lambda_role" {
+  name = "role.lambda.${local.test_lambda_name}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      }
+    ]
+  })
+}
+resource "aws_iam_policy" "test_lambda_policy" {
+  name = "policy.lambda.${local.test_lambda_name}"
+  path = "/"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"],
+        Resource = aws_cloudwatch_log_group.test_lambda_logs.arn,
+        Effect   = "Allow"
+      }
+    ]
+  })
+}
+resource "aws_iam_role_policy_attachment" "test_lambda_apply_permissions" {
+  role       = aws_iam_role.test_lambda_role.name
+  policy_arn = aws_iam_policy.test_lambda_policy.arn
 }
 resource "aws_lambda_function" "test_lambda" {
-  function_name = "TestLambda"
+  function_name = local.test_lambda_name
   role          = aws_iam_role.test_lambda_role.arn
   package_type  = "Image"
   image_uri     = "${aws_ecr_repository.tasks_repo.repository_url}:dummy"
@@ -436,9 +444,10 @@ resource "aws_lambda_function" "test_lambda" {
     command = ["TodayInDestiny2.Tasks::TodayInDestiny2.Tasks.Function::TestLambdaHandler"]
   }
 
-  tags       = local.common_tags
-  depends_on = [null_resource.dummy_container_image]
-
+  depends_on = [
+    null_resource.dummy_container_image,
+    aws_iam_role_policy_attachment.test_lambda_apply_permissions
+  ]
   lifecycle {
     // the deploy process will update the image URI so don't let Terraform reset it back to the dummy image
     ignore_changes = [image_uri]
