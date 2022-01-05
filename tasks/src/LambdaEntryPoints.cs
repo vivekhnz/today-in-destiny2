@@ -7,7 +7,7 @@ namespace TodayInDestiny2.Tasks;
 
 public class LambdaEntryPoints
 {
-    public void RefreshCurrentActivitiesHandler(Stream stream, ILambdaContext ctx)
+    public string RefreshCurrentActivitiesHandler(Stream stream, ILambdaContext ctx)
     {
         Console.WriteLine("Hello from Lambda!");
 
@@ -20,5 +20,7 @@ public class LambdaEntryPoints
         Console.WriteLine($"CloudWatch log group name: {ctx.LogGroupName}");
 
         RefreshCurrentActivitiesFunction.RefreshCurrentActivities();
+
+        return "Done";
     }
 }
