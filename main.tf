@@ -438,6 +438,13 @@ data "aws_iam_policy_document" "refresh_current_activities_lambda_policy" {
       "${aws_s3_bucket.data_bucket.arn}/*"
     ]
   }
+  statement {
+    effect  = "Allow"
+    actions = ["cloudfront:CreateInvalidation"]
+    resources = [
+      aws_cloudfront_distribution.data_s3_distribution.arn
+    ]
+  }
 }
 resource "aws_iam_policy" "refresh_current_activities_lambda_policy" {
   name   = "policy.lambda.${local.refresh_current_activities_lambda_name}"
@@ -463,6 +470,7 @@ resource "aws_lambda_function" "refresh_current_activities_lambda" {
       TID2_CLOUDFRONT_DISTRIBUTION_ID = aws_cloudfront_distribution.data_s3_distribution.id
     }
   }
+  timeout = 60
 
   depends_on = [
     null_resource.dummy_container_image,
