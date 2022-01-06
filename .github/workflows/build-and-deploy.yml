@@ -70,4 +70,4 @@ jobs:
             -DataSourceUri (terraform output -raw data_source_uri) `
             -TasksContainerRepoUri (terraform output -raw tasks_container_repo_uri) `
             -DockerImageNameTag $env:DOCKER_IMAGE_NAME_TAG `
-            -TestLambdaFunctionArn (terraform output -raw test_lambda_function_arn)
+            -RefreshCurrentActivitiesLambdaFunctionArn (terraform output -raw refresh_current_activities_lambda_function_arn)

@@ -138,15 +138,6 @@ resource "aws_s3_bucket_object" "data_d2_folder" {
 
   depends_on = [aws_s3_bucket.data_bucket]
 }
-resource "aws_s3_bucket_object" "data_d2_today_json" {
-  bucket       = local.data_s3_bucket_name
-  key          = "d2/today.json"
-  source       = "data/d2/today.json"
-  content_type = "application/json"
-  etag         = filemd5("data/d2/today.json")
-
-  depends_on = [aws_s3_bucket_object.data_d2_folder]
-}
 
 // CloudFront distributions
 locals {
@@ -392,64 +383,90 @@ EOF
   }
 }
 
-// Lambda function for testing purposes
-locals {
-  test_lambda_name = "TestLambda"
+// Create a group for local developers that is allowed to assume Lambda roles
+resource "aws_iam_group" "developers" {
+  name = "today-in-destiny2-developers"
+
+  lifecycle {
+    // don't destroy the group as members will be manually added to it
+    prevent_destroy = true
+  }
 }
-resource "aws_cloudwatch_log_group" "test_lambda_logs" {
-  name              = "/aws/lambda/${local.test_lambda_name}"
+data "aws_iam_group" "developers" {
+  group_name = aws_iam_group.developers.name
+}
+
+// Lambda function for refreshing current activities
+locals {
+  refresh_current_activities_lambda_name = "RefreshCurrentActivities"
+}
+data "aws_iam_policy_document" "refresh_current_activities_lambda_assume_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+    principals {
+      type        = "AWS"
+      identifiers = [for user in data.aws_iam_group.developers.users : user.arn]
+    }
+  }
+}
+resource "aws_iam_role" "refresh_current_activities_lambda_role" {
+  name               = "role.lambda.${local.refresh_current_activities_lambda_name}"
+  assume_role_policy = data.aws_iam_policy_document.refresh_current_activities_lambda_assume_role.json
+}
+resource "aws_cloudwatch_log_group" "refresh_current_activities_lambda_logs" {
+  name              = "/aws/lambda/${local.refresh_current_activities_lambda_name}"
   retention_in_days = 14
 }
-resource "aws_iam_role" "test_lambda_role" {
-  name = "role.lambda.${local.test_lambda_name}"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-        Effect = "Allow"
-        Sid    = ""
-      }
+data "aws_iam_policy_document" "refresh_current_activities_lambda_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = [
+      aws_cloudwatch_log_group.refresh_current_activities_lambda_logs.arn,
+      "${aws_cloudwatch_log_group.refresh_current_activities_lambda_logs.arn}:*"
     ]
-  })
-}
-resource "aws_iam_policy" "test_lambda_policy" {
-  name = "policy.lambda.${local.test_lambda_name}"
-  path = "/"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"],
-        Resource = [
-          aws_cloudwatch_log_group.test_lambda_logs.arn,
-          "${aws_cloudwatch_log_group.test_lambda_logs.arn}:*"
-        ],
-        Effect   = "Allow"
-      }
+  }
+  statement {
+    effect  = "Allow"
+    actions = ["s3:PutObject"]
+    resources = [
+      "${aws_s3_bucket.data_bucket.arn}/*"
     ]
-  })
+  }
 }
-resource "aws_iam_role_policy_attachment" "test_lambda_apply_permissions" {
-  role       = aws_iam_role.test_lambda_role.name
-  policy_arn = aws_iam_policy.test_lambda_policy.arn
+resource "aws_iam_policy" "refresh_current_activities_lambda_policy" {
+  name   = "policy.lambda.${local.refresh_current_activities_lambda_name}"
+  path   = "/"
+  policy = data.aws_iam_policy_document.refresh_current_activities_lambda_policy.json
 }
-resource "aws_lambda_function" "test_lambda" {
-  function_name = local.test_lambda_name
-  role          = aws_iam_role.test_lambda_role.arn
+resource "aws_iam_role_policy_attachment" "refresh_current_activities_lambda_apply_permissions" {
+  role       = aws_iam_role.refresh_current_activities_lambda_role.name
+  policy_arn = aws_iam_policy.refresh_current_activities_lambda_policy.arn
+}
+resource "aws_lambda_function" "refresh_current_activities_lambda" {
+  function_name = local.refresh_current_activities_lambda_name
+  role          = aws_iam_role.refresh_current_activities_lambda_role.arn
   package_type  = "Image"
   image_uri     = "${aws_ecr_repository.tasks_repo.repository_url}:dummy"
   layers        = []
   image_config {
     command = ["TodayInDestiny2.Tasks::TodayInDestiny2.Tasks.LambdaEntryPoints::RefreshCurrentActivitiesHandler"]
   }
+  environment {
+    variables = {
+      TID2_DATA_S3_BUCKET_NAME        = aws_s3_bucket.data_bucket.bucket
+      TID2_CLOUDFRONT_DISTRIBUTION_ID = aws_cloudfront_distribution.data_s3_distribution.id
+    }
+  }
 
   depends_on = [
     null_resource.dummy_container_image,
-    aws_iam_role_policy_attachment.test_lambda_apply_permissions
+    aws_iam_role_policy_attachment.refresh_current_activities_lambda_apply_permissions
   ]
   lifecycle {
     // the deploy process will update the image URI so don't let Terraform reset it back to the dummy image
@@ -474,7 +491,7 @@ output "tasks_container_repo_uri" {
   value       = aws_ecr_repository.tasks_repo.repository_url
   description = "The URI of the repository that hosts container images for tasks"
 }
-output "test_lambda_function_arn" {
-  value       = aws_lambda_function.test_lambda.arn
-  description = "The ARN of the test lambda function"
+output "refresh_current_activities_lambda_function_arn" {
+  value       = aws_lambda_function.refresh_current_activities_lambda.arn
+  description = "The ARN of the refresh current activities Lambda function"
 }

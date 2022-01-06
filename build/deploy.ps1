@@ -5,7 +5,7 @@ param
     [Parameter(Mandatory = $true)] [string] $DataSourceUri,
     [Parameter(Mandatory = $true)] [string] $TasksContainerRepoUri,
     [Parameter(Mandatory = $true)] [string] $DockerImageNameTag,
-    [Parameter(Mandatory = $true)] [string] $TestLambdaFunctionArn
+    [Parameter(Mandatory = $true)] [string] $RefreshCurrentActivitiesLambdaFunctionArn
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,5 +40,5 @@ Write-Host "  Remote : $remoteImageNameTag"
 
 Write-Host "Updating Lambda function to use new container image..."
 & aws lambda update-function-code `
-    --function-name $TestLambdaFunctionArn `
+    --function-name $RefreshCurrentActivitiesLambdaFunctionArn `
     --image-uri $remoteImageNameTag

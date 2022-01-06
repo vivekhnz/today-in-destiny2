@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AWSProjectType>Lambda</AWSProjectType>
@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.2.0" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.7.8" />
+    <PackageReference Include="AWSSDK.CloudFront" Version="3.7.4.21" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="Amazon.Lambda.Core.LambdaSerializer">

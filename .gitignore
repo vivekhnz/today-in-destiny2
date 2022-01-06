@@ -5,3 +5,11 @@ tasks/src/bin
 tasks/src/obj
 tasks/wrapper/bin
 tasks/wrapper/obj
+
+# Exclude everything in the data folder except index.html
+data
+!data/index.html
+
+# Visual Studio user settings
+*.suo
+launchSettings.json

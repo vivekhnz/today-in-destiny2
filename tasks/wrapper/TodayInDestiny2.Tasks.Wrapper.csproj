@@ -11,4 +11,9 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\TodayInDestiny2.Tasks.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.2.91" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.102" />
+  </ItemGroup>
+
 </Project>
