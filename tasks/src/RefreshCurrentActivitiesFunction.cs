@@ -99,7 +99,7 @@ Last Wish: Keep Out"),
                 return;
             }
         }
-        catch (AmazonS3Exception ex) when (ex.ErrorCode == "NotFound")
+        catch (AmazonS3Exception ex) when (ex.ErrorCode == "NotFound" || ex.ErrorCode == "Forbidden")
         {
             Console.WriteLine("Existing file was not found.");
         }
