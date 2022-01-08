@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CommandLine;
 using System.IO;
 using System.Threading.Tasks;
 using Amazon.IdentityManagement;
@@ -8,46 +9,60 @@ using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using TodayInDestiny2.Tasks;
 
-Console.WriteLine("*** Today in Destiny Task Function Wrapper ***");
-if (args.Length < 1)
-{
-    PrintOptions();
-    return;
-}
-string cmd = args[0];
-if (cmd == "refresh")
-{
-    bool isRunLocalOnly = args.Length > 1 && args[1] == "--local";
+var characterIdArg = new Argument<ulong>(
+    "character id",
+    "The ID of the Destiny 2 character whose activity availability will be queried.");
+var s3BucketArg = new Argument<string>(
+    "bucket name",
+    "The name of the S3 bucket to upload current activities data into.");
+var cfDistributionArg = new Argument<string>(
+    "distribution id",
+    "The ID of the CloudFront distribution to invalidate after uploading data into the S3 bucket.");
 
-    string? dataS3BucketName = null;
-    string? cloudFrontDistributionId = null;
-    AWSCredentials? creds = null;
+var refreshLocalCommand = new Command("local", "Refresh current activities and save to a local JSON file.")
+{
+    characterIdArg
+};
+refreshLocalCommand.SetHandler<ulong>(RefreshLocalAsync, characterIdArg);
 
-    if (!isRunLocalOnly)
+var refreshAwsCommand = new Command("aws", "Refresh current activities and save to AWS.")
+{
+    characterIdArg, s3BucketArg, cfDistributionArg
+};
+refreshAwsCommand.SetHandler<ulong, string, string>(
+    RefreshAwsAsync, characterIdArg, s3BucketArg, cfDistributionArg);
+
+return
+    await new RootCommand("Today in Destiny Task Function Wrapper")
     {
-        Console.Write("Enter S3 bucket name or leave blank to skip upload: ");
-        dataS3BucketName = Console.ReadLine();
-
-        Console.Write("Enter CloudFront distribution ID or leave blank to skip upload: ");
-        cloudFrontDistributionId = Console.ReadLine();
-
-        creds = await AssumeRoleAsync("role.lambda.RefreshCurrentActivities");
+        new Command("refresh", "Refresh current activities.")
+        {
+            refreshLocalCommand, refreshAwsCommand
+        }
     }
+    .InvokeAsync(args);
 
-    Console.WriteLine("Running refresh current activities function...");
+async Task RefreshLocalAsync(ulong characterId)
+{
     string dataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\..\data");
     await RefreshCurrentActivitiesFunction.RefreshCurrentActivitiesAsync(new(
-        DestinyCharacterId: "2305843009301193818",
-        Credentials: creds,
-        DataS3BucketName: dataS3BucketName,
-        CloudFrontDistributionId: cloudFrontDistributionId,
+        DestinyCharacterId: characterId.ToString(),
+        Credentials: null,
+        DataS3BucketName: null,
+        CloudFrontDistributionId: null,
         LocalDataDir: dataDir
     ));
 }
-else
+
+async Task RefreshAwsAsync(ulong characterId, string s3BucketName, string cfDistributionId)
 {
-    PrintOptions();
-    return;
+    await RefreshCurrentActivitiesFunction.RefreshCurrentActivitiesAsync(new(
+        DestinyCharacterId: characterId.ToString(),
+        Credentials: await AssumeRoleAsync("role.lambda.RefreshCurrentActivities"),
+        DataS3BucketName: s3BucketName,
+        CloudFrontDistributionId: cfDistributionId,
+        LocalDataDir: null
+    ));
 }
 
 async Task<AWSCredentials> AssumeRoleAsync(string roleName)
@@ -63,13 +78,4 @@ async Task<AWSCredentials> AssumeRoleAsync(string roleName)
     });
 
     return assumeResponse.Credentials;
-}
-
-void PrintOptions()
-{
-    Console.WriteLine("Please specify a valid command i.e.");
-    Console.WriteLine("  dotnet run <option>");
-    Console.WriteLine();
-    Console.WriteLine("Options:");
-    Console.WriteLine("  refresh : Refresh current activities");
 }

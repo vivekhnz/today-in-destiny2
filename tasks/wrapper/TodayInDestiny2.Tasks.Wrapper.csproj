@@ -5,6 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <AssemblyName>tid2</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta2.21617.1" />
     <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.2.91" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.102" />
   </ItemGroup>
