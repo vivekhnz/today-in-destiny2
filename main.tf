@@ -8,6 +8,7 @@
   
   Ensure the following environment variables are set:
   - TF_VAR_domain_name
+  - TF_VAR_destiny_character_id
 */
 
 terraform {
@@ -34,6 +35,10 @@ terraform {
 variable "domain_name" {
   type        = string
   description = "The domain name for the website excluding the 'www.' prefix."
+}
+variable "destiny_character_id" {
+  type        = string
+  description = "The ID of the Destiny 2 character whose activity availability will be queried."
 }
 
 // Setup
@@ -466,6 +471,7 @@ resource "aws_lambda_function" "refresh_current_activities_lambda" {
   }
   environment {
     variables = {
+      TID2_DESTINY_CHARACTER_ID       = var.destiny_character_id
       TID2_DATA_S3_BUCKET_NAME        = aws_s3_bucket.data_bucket.bucket
       TID2_CLOUDFRONT_DISTRIBUTION_ID = aws_cloudfront_distribution.data_s3_distribution.id
     }

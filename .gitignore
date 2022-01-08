@@ -13,3 +13,4 @@ data
 # Visual Studio user settings
 *.suo
 launchSettings.json
+.vs

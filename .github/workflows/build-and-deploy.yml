@@ -60,6 +60,7 @@ jobs:
       - name: Terraform Apply
         env:
           TF_VAR_domain_name: ${{ secrets.WEBSITE_DOMAIN_NAME }}
+          TF_VAR_destiny_character_id: ${{ secrets.DESTINY_CHARACTER_ID }}
         run: terraform apply -auto-approve -input=false
       - name: Deploy
         shell: pwsh

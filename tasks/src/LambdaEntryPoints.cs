@@ -10,6 +10,7 @@ public class LambdaEntryPoints
     public async Task<string> RefreshCurrentActivitiesHandler(Stream stream, ILambdaContext ctx)
     {
         await RefreshCurrentActivitiesFunction.RefreshCurrentActivitiesAsync(new(
+            DestinyCharacterId: Environment.GetEnvironmentVariable("TID2_DESTINY_CHARACTER_ID"),
             Credentials: null,
             DataS3BucketName: Environment.GetEnvironmentVariable("TID2_DATA_S3_BUCKET_NAME"),
             CloudFrontDistributionId: Environment.GetEnvironmentVariable("TID2_CLOUDFRONT_DISTRIBUTION_ID"),

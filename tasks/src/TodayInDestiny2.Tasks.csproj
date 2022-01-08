@@ -18,4 +18,9 @@
       <_Parameter1_TypeName>System.Type</_Parameter1_TypeName>
     </AssemblyAttribute>
   </ItemGroup>
+  <ItemGroup>
+    <None Update="JsonData/*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
