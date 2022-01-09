@@ -506,6 +506,21 @@ resource "aws_lambda_function" "refresh_current_activities_lambda" {
     ignore_changes = [image_uri]
   }
 }
+resource "aws_cloudwatch_event_rule" "refresh_current_activities_scheduled_trigger" {
+  name = "${local.refresh_current_activities_lambda_name}_ScheduledTrigger"
+  schedule_expression = "cron(5 * * * ? *)"
+}
+resource "aws_lambda_permission" "allow_eventbridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.refresh_current_activities_lambda.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.refresh_current_activities_scheduled_trigger.arn
+}
+resource "aws_cloudwatch_event_target" "run_refresh_current_activities_lambda" {
+  arn  = aws_lambda_function.refresh_current_activities_lambda.arn
+  rule = aws_cloudwatch_event_rule.refresh_current_activities_scheduled_trigger.id
+}
 
 // Outputs
 output "website_s3_uri" {
