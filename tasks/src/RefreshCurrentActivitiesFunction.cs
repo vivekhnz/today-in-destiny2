@@ -19,8 +19,11 @@ public static class RefreshCurrentActivitiesFunction
     const string CurrentActivitiesS3FileKey = "d2/today.json";
 
     public record class TaskDefinition(
-        string? DestinyCharacterId,
-        AWSCredentials? Credentials,
+        string BungieApiKey,
+        string DestinyMembershipType,
+        string DestinyMembershipId,
+        string DestinyCharacterId,
+        AWSCredentials? AwsCredentials,
         string? DataS3BucketName, string? CloudFrontDistributionId,
         string? LocalDataDir);
 
@@ -39,12 +42,18 @@ public static class RefreshCurrentActivitiesFunction
         Console.WriteLine("Refreshing current activities...");
 
         List<ActivityCategory>? currentActivities = null;
-
-        using (var activitiesResponse = await GetCurrentActivitiesAsync())
-        using (var modifiers = await GetModifiersAsync())
+        using (var bungieService = new BungieService(taskDef.BungieApiKey))
         {
-            var extractedActivities = ExtractCurrentActivities(taskDef, activitiesResponse, modifiers);
-            currentActivities = CategorizeCurrentActivities(extractedActivities);
+            var getCurrentActivities = bungieService.GetCurrentActivitiesAsync(
+                taskDef.DestinyMembershipType, taskDef.DestinyMembershipId);
+            var getModifiers = bungieService.GetModifiersAsync();
+
+            using (var activitiesResponse = await getCurrentActivities)
+            using (var modifiers = await getModifiers)
+            {
+                var extractedActivities = ExtractCurrentActivities(taskDef, activitiesResponse, modifiers);
+                currentActivities = CategorizeCurrentActivities(extractedActivities);
+            }
         }
 
         Console.WriteLine("Serializing current activities to JSON...");
@@ -67,31 +76,13 @@ public static class RefreshCurrentActivitiesFunction
         }
     }
 
-    private static async Task<JsonDocument> GetCurrentActivitiesAsync()
-    {
-        string jsonDataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "JsonData");
-        string activitiesResponseFilePath = Path.Combine(jsonDataDir, "currentActivities.json");
-        return await JsonDocument.ParseAsync(File.OpenRead(activitiesResponseFilePath));
-    }
-
-    private static async Task<JsonDocument> GetModifiersAsync()
-    {
-        string jsonDataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "JsonData");
-        string modifiersFilePath = Path.Combine(jsonDataDir, "modifiers.json");
-        return await JsonDocument.ParseAsync(File.OpenRead(modifiersFilePath));
-    }
-
     private static IEnumerable<ExtractedActivity> ExtractCurrentActivities(
         TaskDefinition taskDef, JsonDocument responseDoc, JsonDocument modifiersDoc)
     {
         Console.WriteLine("Extracting current activities from response...");
 
-        if (taskDef.DestinyCharacterId != null
-            && responseDoc.RootElement.TryGetProperty("Response", out var profile)
-            && profile.TryGetProperty("characterActivities", out var component)
-            && component.TryGetProperty("data", out var characterActivitiesByCharacter)
-            && characterActivitiesByCharacter.TryGetProperty(taskDef.DestinyCharacterId, out var characterActivities)
-            && characterActivities.TryGetProperty("availableActivities", out var availableActivities))
+        if (responseDoc.TryGetPropertyChain(out var availableActivities,
+            "Response", "characterActivities", "data", taskDef.DestinyCharacterId, "availableActivities"))
         {
             var aggregateActivities = new List<ExtractedActivity>();
 
@@ -189,9 +180,7 @@ public static class RefreshCurrentActivitiesFunction
 
     private static string GetModifierName(JsonDocument doc, ulong hash)
     {
-        if (doc.RootElement.TryGetProperty(hash.ToString(), out var modifier)
-            && modifier.TryGetProperty("displayProperties", out var displayProperties)
-            && displayProperties.TryGetProperty("name", out var name))
+        if (doc.TryGetPropertyChain(out var name, hash.ToString(), "displayProperties", "name"))
         {
             return name.GetString() ?? string.Empty;
         }
@@ -223,9 +212,9 @@ public static class RefreshCurrentActivitiesFunction
         }
 
         Console.WriteLine("Querying ETag from S3 bucket...");
-        var s3Client = taskDef.Credentials == null
+        var s3Client = taskDef.AwsCredentials == null
             ? new AmazonS3Client()
-            : new AmazonS3Client(taskDef.Credentials);
+            : new AmazonS3Client(taskDef.AwsCredentials);
         try
         {
             var metadata = await s3Client.GetObjectMetadataAsync(
@@ -259,9 +248,9 @@ public static class RefreshCurrentActivitiesFunction
         });
 
         // invalidate CloudFront cache
-        var cfClient = taskDef.Credentials == null
+        var cfClient = taskDef.AwsCredentials == null
             ? new AmazonCloudFrontClient()
-            : new AmazonCloudFrontClient(taskDef.Credentials);
+            : new AmazonCloudFrontClient(taskDef.AwsCredentials);
 
         var invalidationBatch = new InvalidationBatch(
             new Paths

@@ -60,6 +60,9 @@ jobs:
       - name: Terraform Apply
         env:
           TF_VAR_domain_name: ${{ secrets.WEBSITE_DOMAIN_NAME }}
+          TF_VAR_bungie_api_key: ${{ secrets.BUNGIE_API_KEY }}
+          TF_VAR_destiny_membership_type: ${{ secrets.DESTINY_MEMBERSHIP_TYPE }}
+          TF_VAR_destiny_membership_id: ${{ secrets.DESTINY_MEMBERSHIP_ID }}
           TF_VAR_destiny_character_id: ${{ secrets.DESTINY_CHARACTER_ID }}
         run: terraform apply -auto-approve -input=false
       - name: Deploy

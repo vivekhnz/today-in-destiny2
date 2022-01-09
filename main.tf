@@ -8,6 +8,9 @@
   
   Ensure the following environment variables are set:
   - TF_VAR_domain_name
+  - TF_VAR_bungie_api_key
+  - TF_VAR_destiny_membership_type
+  - TF_VAR_destiny_membership_id
   - TF_VAR_destiny_character_id
 */
 
@@ -35,6 +38,19 @@ terraform {
 variable "domain_name" {
   type        = string
   description = "The domain name for the website excluding the 'www.' prefix."
+}
+variable "bungie_api_key" {
+  type        = string
+  description = "A Bungie API key retrieved from the Bungie Developer Portal."
+  sensitive = true
+}
+variable "destiny_membership_type" {
+  type        = string
+  description = "The membership type of the Destiny 2 account whose activity availability will be queried."
+}
+variable "destiny_membership_id" {
+  type        = string
+  description = "The membership ID of the Destiny 2 account whose activity availability will be queried."
 }
 variable "destiny_character_id" {
   type        = string
@@ -471,6 +487,9 @@ resource "aws_lambda_function" "refresh_current_activities_lambda" {
   }
   environment {
     variables = {
+      TID2_BUNGIE_API_KEY             = var.bungie_api_key
+      TID2_DESTINY_MEMBERSHIP_TYPE    = var.destiny_membership_type
+      TID2_DESTINY_MEMBERSHIP_ID      = var.destiny_membership_id
       TID2_DESTINY_CHARACTER_ID       = var.destiny_character_id
       TID2_DATA_S3_BUCKET_NAME        = aws_s3_bucket.data_bucket.bucket
       TID2_CLOUDFRONT_DISTRIBUTION_ID = aws_cloudfront_distribution.data_s3_distribution.id
