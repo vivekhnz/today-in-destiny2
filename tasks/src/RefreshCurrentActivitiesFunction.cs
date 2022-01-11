@@ -27,15 +27,15 @@ public static class RefreshCurrentActivitiesFunction
         string? DataS3BucketName, string? CloudFrontDistributionId,
         string? LocalDataDir);
 
-    public record class Activity(string Name, string Description);
+    public record class Activity(string Type, string Name, string[]? Modifiers);
     public record class ActivityCategory(string Category, IEnumerable<Activity> Activities);
 
-    public record class ExtractedActivity(string Category, string Name, string Description)
-        : Activity(Name, Description);
-    public record class DailyActivity(string Name, string Description)
-        : ExtractedActivity("Today", Name, Description);
-    public record class WeeklyActivity(string Name, string Description)
-        : ExtractedActivity("This Week", Name, Description);
+    public record class ExtractedActivity(string Category, string Type, string Name, string[]? Modifiers = null)
+        : Activity(Type, Name, Modifiers);
+    public record class DailyActivity(string Type, string Name, string[]? Modifiers = null)
+        : ExtractedActivity("Today", Type, Name, Modifiers);
+    public record class WeeklyActivity(string Type, string Name, string[]? Modifiers = null)
+        : ExtractedActivity("This Week", Type, Name, Modifiers);
 
     public async static Task RefreshCurrentActivitiesAsync(TaskDefinition taskDef)
     {
@@ -84,23 +84,23 @@ public static class RefreshCurrentActivitiesFunction
         if (responseDoc.TryGetPropertyChain(out var availableActivities,
             "Response", "characterActivities", "data", taskDef.DestinyCharacterId, "availableActivities"))
         {
-            var aggregateActivities = new List<ExtractedActivity>();
-
             foreach (var activity in availableActivities.EnumerateArray())
             {
                 if (!activity.TryGetProperty("activityHash", out var activityHashProp)) continue;
 
                 ulong activityHash = activityHashProp.GetUInt64();
-                var modifierNames = activity.TryGetProperty("modifierHashes", out var modifierHashesProp)
-                    ? modifierHashesProp
+                string[]? modifierNames = null;
+                if (activity.TryGetProperty("modifierHashes", out var modifierHashesProp))
+                {
+                    modifierNames = modifierHashesProp
                         .EnumerateArray()
                         .Select(hash => GetModifierName(modifiersDoc, hash.GetUInt64()))
-                    : Enumerable.Empty<string>();
-                string modifierNamesText = string.Join("\n", modifierNames);
+                        .ToArray();
+                }
 
                 ExtractedActivity? extracted = activityHash switch
                 {
-                    743628305 => new DailyActivity("Vanguard Strike Modifiers", modifierNamesText),
+                    743628305 => new DailyActivity("Daily Modifiers", "Vanguard Strikes", modifierNames),
 
                     540869524 => new WeeklyActivity("Crucible Playlist", "Clash"),
                     142028034 or 1151331757 or 1457072306 => new WeeklyActivity("Crucible Playlist", "Showdown"),
@@ -135,45 +135,28 @@ public static class RefreshCurrentActivitiesFunction
                     5517242 => new WeeklyActivity("Empire Hunt", "The Technocrat"),
                     2205920677 => new WeeklyActivity("Empire Hunt", "The Dark Priestess"),
 
+                    3881495763 => new WeeklyActivity("Vault of Glass Challenge",
+                        modifierNames?.FirstOrDefault() ?? string.Empty),
+                    910380154 => new WeeklyActivity("Deep Stone Crypt Challenge",
+                        modifierNames?.FirstOrDefault() ?? string.Empty),
+                    3458480158 => new WeeklyActivity("Garden of Salvation Challenge",
+                        modifierNames?.FirstOrDefault() ?? string.Empty),
+
+                    2195531043 or 571058904 => new WeeklyActivity("Nightmare Hunt", "Anguish (Omnigul)"),
+                    1086094024 or 2450170731 => new WeeklyActivity("Nightmare Hunt", "Despair (Crota)"),
+                    1342492675 or 77280912 => new WeeklyActivity("Nightmare Hunt", "Fear (Phogoth)"),
+                    2639701103 or 66809868 => new WeeklyActivity("Nightmare Hunt", "Insanity (The Fanatic)"),
+                    1344110078 or 3205253945 => new WeeklyActivity("Nightmare Hunt", "Isolation (Taniks)"),
+                    1907493625 or 3821020454 => new WeeklyActivity("Nightmare Hunt", "Pride (Skolas)"),
+                    2055076382 or 4098556693 => new WeeklyActivity("Nightmare Hunt", "Rage (Ghaul)"),
+                    1188363426 or 1743972305 => new WeeklyActivity("Nightmare Hunt", "Servitude (Zydron)"),
+
                     _ => null
                 };
                 if (extracted is not null)
                 {
                     yield return extracted;
                 }
-                else
-                {
-                    ExtractedActivity? aggregateExtracted = activityHash switch
-                    {
-                        3881495763 => new WeeklyActivity("Raid Challenges", $"Vault of Glass: {modifierNamesText}"),
-                        910380154 => new WeeklyActivity("Raid Challenges", $"Deep Stone Crypt: {modifierNamesText}"),
-                        3458480158 => new WeeklyActivity("Raid Challenges", $"Garden of Salvation: {modifierNamesText}"),
-
-                        2195531043 or 571058904 => new WeeklyActivity("Nightmare Hunts", "Anguish (Omnigul)"),
-                        1086094024 or 2450170731 => new WeeklyActivity("Nightmare Hunts", "Despair (Crota)"),
-                        1342492675 or 77280912 => new WeeklyActivity("Nightmare Hunts", "Fear (Phogoth)"),
-                        2639701103 or 66809868 => new WeeklyActivity("Nightmare Hunts", "Insanity (The Fanatic)"),
-                        1344110078 or 3205253945 => new WeeklyActivity("Nightmare Hunts", "Isolation (Taniks)"),
-                        1907493625 or 3821020454 => new WeeklyActivity("Nightmare Hunts", "Pride (Skolas)"),
-                        2055076382 or 4098556693 => new WeeklyActivity("Nightmare Hunts", "Rage (Ghaul)"),
-                        1188363426 or 1743972305 => new WeeklyActivity("Nightmare Hunts", "Servitude (Zydron)"),
-
-                        _ => null
-                    };
-                    if (aggregateExtracted is not null)
-                    {
-                        aggregateActivities.Add(aggregateExtracted);
-                    }
-                }
-            }
-
-            foreach (var extractGroup in aggregateActivities.GroupBy(activity => (activity.Category, activity.Name)))
-            {
-                yield return new ExtractedActivity(
-                    Category: extractGroup.Key.Category,
-                    Name: extractGroup.Key.Name,
-                    Description: string.Join("\n", extractGroup.Select(activity => activity.Description))
-                );
             }
         }
     }

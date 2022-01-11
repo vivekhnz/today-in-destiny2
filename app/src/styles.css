@@ -1,16 +1,66 @@
+body, p, ul {
+    margin: 0;
+}
 body {
     font-family: sans-serif;
+    background-color: #d6d6d9;
 }
-table.activityCategoryTables {
-    border-spacing: 0;
+
+div.container {
+    max-width: 1300px;
+    padding: 0 12px;
+    margin: 0px auto;
 }
-table.activityCategoryTables tr.categoryHeader {
-    background-color: #ccc;
+
+div.activityGrid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 8px;
+}
+@media (min-width: 760px) {
+    div.activityGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (min-width: 1200px) {
+    div.activityGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+div.activityBlock {
+    background-color: #273a41;
+    padding: 12px;
+    border-radius: 4px;
+}
+div.activityBlock > p.activityType {
+    color: #93a3ae;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+div.activityBlock > p.activityName {
+    color: white;
+    text-transform: uppercase;
+    font-weight: bold;
     font-size: 24px;
 }
-table.activityCategoryTables td {
-    border: 1px solid black;
-    vertical-align: top;
-    padding: 4px;
-    white-space: pre;
+div.activityBlock > ul.activityModifiers {
+    list-style-type: none;
+    margin-top: 4px;
+    padding: 0;
+    border-top: 2px solid #45535c;
+}
+div.activityBlock > ul.activityModifiers > li {
+    display: inline-block;
+    color: white;
+    font-size: 14px;
+    margin: 8px 8px 0 0;
+    padding: 2px 4px;
+    border: 1px solid lightblue;
+}
+
+p.footer {
+    margin-top: 24px;
 }

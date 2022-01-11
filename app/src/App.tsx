@@ -6,8 +6,9 @@ interface Props {
 }
 
 interface Activity {
+    type: string
     name: string
-    description: string
+    modifiers?: string[]
 }
 interface ActivityCategory {
     category: string
@@ -36,39 +37,50 @@ const App: React.FC<Props> = props => {
 
     const year = new Date().getFullYear();
     const app = (
-        <>
+        <div className='container'>
             <h1>Today in Destiny 2</h1>
-            <p>WARNING: Today in Destiny 2 is a work-in-progress and any data displayed may be incorrect or out-of-date.</p>
             {loadingState && <p>{loadingState}</p>}
             {renderActivities(currentActivities)}
-            <p>
+            <p className='footer'>
                 &copy; {year} Vivek Hari<br />
                 Not affiliated with Bungie
             </p>
-        </>
+        </div>
     )
     return app
 }
 
-function renderActivities(categories: ActivityCategory[]) {
+function renderActivityBlock(activity: Activity) {
     return (
-        <table className='activityCategoryTables'>
-            <tbody>
-                {categories.map(category =>
-                    <Fragment key={`category.${category.category}`}>
-                        <tr className='categoryHeader'>
-                            <td colSpan={2}>{category.category}</td>
-                        </tr>
+        <div className='activityBlock'>
+            <p className='activityType'>{activity.type}</p>
+            <p className='activityName'>{activity.name}</p>
+            {activity.modifiers && activity.modifiers.length > 0 && <ul className='activityModifiers'>
+                {activity.modifiers.map(modifier => <li key={modifier}>{modifier}</li>)}
+            </ul>}
+        </div>
+    );
+}
+
+function renderActivities(categories: ActivityCategory[]) {
+    const categoryOrder: string[] = ['Today', 'This Week'];
+    const sortedCategories = categories.sort(
+        (a, b) => categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category));
+    return (
+        <>
+            {sortedCategories.map(category =>
+                <Fragment key={`category.${category.category}`}>
+                    <h2>{category.category}</h2>
+                    <div className='activityGrid'>
                         {category.activities.map(activity =>
-                            <tr key={`activity.${activity.name}`}>
-                                <td>{activity.name}</td>
-                                <td>{activity.description}</td>
-                            </tr>
+                            <Fragment key={`activity.${activity.type}.${activity.name}`}>
+                                {renderActivityBlock(activity)}
+                            </Fragment>
                         )}
-                    </Fragment>
-                )}
-            </tbody>
-        </table>
+                    </div>
+                </Fragment>
+            )}
+        </>
     )
 }
 
