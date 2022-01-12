@@ -37,15 +37,25 @@ const App: React.FC<Props> = props => {
 
     const year = new Date().getFullYear();
     const app = (
-        <div className='container'>
-            <h1>Today in Destiny 2</h1>
-            {loadingState && <p>{loadingState}</p>}
-            {renderActivities(currentActivities)}
-            <p className='footer'>
-                &copy; {year} Vivek Hari<br />
-                Not affiliated with Bungie
-            </p>
-        </div>
+        <>
+            <div className='header'>
+                <div className='headerContent'>
+                    <h1 className='appTitle'>
+                        <span className='line1'>Today in</span>
+                        <br />
+                        <span className='line2'>Destiny 2</span>
+                    </h1>
+                </div>
+            </div>
+            <div className='container'>
+                {loadingState && <p>{loadingState}</p>}
+                {renderActivities(currentActivities)}
+                <p className='footer'>
+                    <span className='line1'>&copy; {year} Vivek Hari</span><br />
+                    <span className='line2'>Not affiliated with Bungie</span>
+                </p>
+            </div>
+        </>
     )
     return app
 }
@@ -70,7 +80,8 @@ function renderActivities(categories: ActivityCategory[]) {
         <>
             {sortedCategories.map(category =>
                 <Fragment key={`category.${category.category}`}>
-                    <h2>{category.category}</h2>
+                    <h2 className='categoryHeader'>{category.category}</h2>
+                    <div className='categorySeparator'></div>
                     <div className='activityGrid'>
                         {category.activities.map(activity =>
                             <Fragment key={`activity.${activity.type}.${activity.name}`}>
