@@ -40,14 +40,14 @@ h1.appTitle {
     margin: 0;
 }
 h1.appTitle > span.line1 {
-    font-family: 'bebas';
+    font-family: 'bebas', 'Segoe UI', 'Helvetica', sans-serif;
     font-weight: normal;
     font-size: 32px;
     color: #486e7e;
 }
 h1.appTitle > span.line2 {
-    font-family: 'bebas';
-    font-weight: bold;
+    font-family: 'bebas', 'Segoe UI', 'Helvetica', sans-serif;
+    font-weight: normal;
     font-size: 72px;
     color: #273a41;
     line-height: 64px;
@@ -59,9 +59,15 @@ div.container {
     margin: 0px auto;
 }
 
+p.loading {
+    margin-top: 24px;
+    font-family: 'bender', 'Segoe UI', 'Helvetica', sans-serif;
+    color: #273a41;
+}
+
 h2.categoryHeader {
     text-transform: uppercase;
-    font-family: 'bebas';
+    font-family: 'bebas', 'Segoe UI', 'Helvetica', sans-serif;
     font-weight: bold;
     font-size: 36px;
     color: #273a41;
@@ -94,45 +100,52 @@ div.activityGrid {
 
 div.activityBlock {
     background-color: #273a41;
-    padding: 12px;
-    border-radius: 4px;
+    background-size: cover;
+    background-position: center 25%;
+    padding: 72px 12px 12px 12px;
+    border-radius: 3px;
+    box-shadow: 0 0 4px 1px rgb(0 0 0 / 25%);
 }
 div.activityBlock > p.activityType {
     color: #93a3ae;
     text-transform: uppercase;
-    font-family: 'bender';
+    font-family: 'bender', 'Segoe UI', 'Helvetica', sans-serif;
     font-weight: bold;
     font-size: 15px;
     margin-bottom: 0px;
+    text-shadow: 0.5px 0.5px 0 #273a41;
 }
 div.activityBlock > p.activityName {
     color: white;
     text-transform: uppercase;
-    font-family: 'bebas';
+    font-family: 'bebas', 'Segoe UI', 'Helvetica', sans-serif;
     font-weight: bold;
     font-size: 36px;
+    text-shadow: 1px 1px 2px #273a41;
 }
 div.activityBlock > ul.activityModifiers {
     list-style-type: none;
     margin-top: 4px;
     padding: 0;
-    border-top: 2px solid #45535c;
+    border-top: 2px solid rgba(255, 255, 255, 0.3);
 }
 div.activityBlock > ul.activityModifiers > li {
     display: inline-block;
-    color: white;
-    font-family: 'bender';
+    font-family: 'bender', 'Segoe UI', 'Helvetica', sans-serif;
     font-weight: bold;
     text-transform: uppercase;
     font-size: 11px;
     margin: 8px 8px 0 0;
     padding: 2px 4px;
-    border: 1px solid lightblue;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background-color: rgb(39, 58, 65, 0.5);
+    border-radius: 3px;
+    color: white;
 }
 
 p.footer {
     margin: 24px 0;
-    font-family: 'bender';
+    font-family: 'bender', 'Segoe UI', 'Helvetica', sans-serif;
 }
 p.footer > span.line1 {
     color: #273a41;

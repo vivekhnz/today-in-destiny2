@@ -1,18 +1,10 @@
 import React, { Fragment, useEffect, useState } from 'react'
+import ActivityBlock from './ActivityBlock';
+import { Activity, ActivityCategory } from './interfaces';
 import "./styles.css";
 
 interface Props {
     dataSourceUri: string
-}
-
-interface Activity {
-    type: string
-    name: string
-    modifiers?: string[]
-}
-interface ActivityCategory {
-    category: string
-    activities: Activity[]
 }
 
 const App: React.FC<Props> = props => {
@@ -48,7 +40,7 @@ const App: React.FC<Props> = props => {
                 </div>
             </div>
             <div className='container'>
-                {loadingState && <p>{loadingState}</p>}
+                {loadingState && <p className='loading'>{loadingState}</p>}
                 {renderActivities(currentActivities)}
                 <p className='footer'>
                     <span className='line1'>&copy; {year} Vivek Hari</span><br />
@@ -58,18 +50,6 @@ const App: React.FC<Props> = props => {
         </>
     )
     return app
-}
-
-function renderActivityBlock(activity: Activity) {
-    return (
-        <div className='activityBlock'>
-            <p className='activityType'>{activity.type}</p>
-            <p className='activityName'>{activity.name}</p>
-            {activity.modifiers && activity.modifiers.length > 0 && <ul className='activityModifiers'>
-                {activity.modifiers.map(modifier => <li key={modifier}>{modifier}</li>)}
-            </ul>}
-        </div>
-    );
 }
 
 function renderActivities(categories: ActivityCategory[]) {
@@ -84,9 +64,9 @@ function renderActivities(categories: ActivityCategory[]) {
                     <div className='categorySeparator'></div>
                     <div className='activityGrid'>
                         {category.activities.map(activity =>
-                            <Fragment key={`activity.${activity.type}.${activity.name}`}>
-                                {renderActivityBlock(activity)}
-                            </Fragment>
+                            <ActivityBlock
+                                key={`activity.${activity.type}.${activity.name}`}
+                                activity={activity} />
                         )}
                     </div>
                 </Fragment>
