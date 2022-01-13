@@ -32,6 +32,7 @@ const App: React.FC<Props> = props => {
         <>
             <div className='header'>
                 <div className='headerContent'>
+                    <div className='headerLogo'></div>
                     <h1 className='appTitle'>
                         <span className='line1'>Today in</span>
                         <br />
