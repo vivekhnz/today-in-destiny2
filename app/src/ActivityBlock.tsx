@@ -1,23 +1,24 @@
-import React, { CSSProperties, Fragment, useEffect, useState } from 'react'
-import { Activity } from './interfaces';
+import React, { CSSProperties } from 'react'
+import { ActivityModifier } from './activities';
 
 interface Props {
-    activity: Activity
+    type: string
+    name: string
+    imageUrl: string
+    modifiers?: ActivityModifier[]
 }
 
 const ActivityBlock: React.FC<Props> = props => {
-    const activity = props.activity;
     const gradient = 'linear-gradient(45deg, rgba(39, 58, 65, 0.7), rgba(39, 58, 65, 0.45))';
-    const imageUrl = props.activity.imageUrl;
     const blockStyle: CSSProperties = {
-        backgroundImage: imageUrl && `${gradient}, url('${imageUrl}')`
+        backgroundImage: props.imageUrl && `${gradient}, url('${props.imageUrl}')`
     };
     return (
         <div className='activityBlock' style={blockStyle}>
-            <p className='activityType'>{activity.type}</p>
-            <p className='activityName'>{activity.name}</p>
-            {activity.modifiers && activity.modifiers.length > 0 && <ul className='activityModifiers'>
-                {activity.modifiers.map(modifier => <li key={modifier}>{modifier}</li>)}
+            <p className='activityType'>{props.type}</p>
+            <p className='activityName'>{props.name}</p>
+            {props.modifiers && props.modifiers.length > 0 && <ul className='activityModifiers'>
+                {props.modifiers.map(modifier => <li key={modifier.modifierName}>{modifier.modifierName}</li>)}
             </ul>}
         </div>
     );
