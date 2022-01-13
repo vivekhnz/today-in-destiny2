@@ -23,7 +23,7 @@ public class WeeklyActivities
 public record class Activity(string ActivityName, string ImageUrl);
 
 public record ActivityWithModifiers(string ImageUrl, ActivityModifier[] Modifiers);
-public record class ActivityModifier(string ModifierName);
+public record class ActivityModifier(string ModifierName, string Description, string IconUrl);
 
 public class RaidChallenges
 {

@@ -216,12 +216,27 @@ public static class RefreshCurrentActivitiesFunction
 
     private static ActivityModifier? GetModifier(JsonDocument doc, ulong hash)
     {
-        if (doc.TryGetPropertyChain(out var name, hash.ToString(), "displayProperties", "name"))
+        if (doc.TryGetPropertyChain(out var displayProperties, hash.ToString(), "displayProperties")
+            && displayProperties.TryGetProperty("name", out var name))
         {
             string? modifierName = name.GetString();
             if (modifierName != null)
             {
-                return new ActivityModifier(modifierName);
+                string description = string.Empty;
+                if (displayProperties.TryGetProperty("description", out var descriptionProp))
+                {
+                    description = descriptionProp.GetString() ?? string.Empty;
+                }
+                string iconUrl = string.Empty;
+                if (displayProperties.TryGetProperty("icon", out var iconProp))
+                {
+                    iconUrl = iconProp.GetString() ?? string.Empty;
+                }
+                if (!string.IsNullOrWhiteSpace(iconUrl))
+                {
+                    iconUrl = $"https://bungie.net{iconUrl}";
+                }
+                return new ActivityModifier(modifierName, description, iconUrl);
             }
         }
 

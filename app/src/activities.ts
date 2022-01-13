@@ -27,6 +27,8 @@ export interface ActivityWithModifiers {
 }
 export interface ActivityModifier {
     modifierName: string
+    description: string
+    iconUrl: string
 }
 
 export interface RaidChallenges {

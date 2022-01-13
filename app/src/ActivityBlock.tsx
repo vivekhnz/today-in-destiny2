@@ -17,10 +17,22 @@ const ActivityBlock: React.FC<Props> = props => {
         <div className='activityBlock' style={blockStyle}>
             <p className='activityType'>{props.type}</p>
             <p className='activityName'>{props.name}</p>
-            {props.modifiers && props.modifiers.length > 0 && <ul className='activityModifiers'>
-                {props.modifiers.map(modifier => <li key={modifier.modifierName}>{modifier.modifierName}</li>)}
-            </ul>}
+            {props.modifiers && props.modifiers.length > 0 && <>
+                <div className='separator'></div>
+                <ul className='activityModifiers'>
+                    {props.modifiers.map(modifier => renderModifier(modifier))}
+                </ul>
+            </>}
         </div>
+    );
+}
+
+function renderModifier(modifier: ActivityModifier) {
+    return (
+        <li key={modifier.modifierName} title={modifier.description}>
+            <img src={modifier.iconUrl} />
+            <p>{modifier.modifierName}</p>
+        </li>
     );
 }
 

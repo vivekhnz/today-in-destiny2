@@ -102,7 +102,7 @@ div.activityBlock {
     background-color: #273a41;
     background-size: cover;
     background-position: center 25%;
-    padding: 72px 12px 12px 12px;
+    padding: 48px 12px 12px 12px;
     border-radius: 3px;
     box-shadow: 0 0 4px 1px rgb(0 0 0 / 25%);
 }
@@ -123,24 +123,38 @@ div.activityBlock > p.activityName {
     font-size: 36px;
     text-shadow: 1px 1px 2px #273a41;
 }
+div.activityBlock > div.separator {
+    height: 4px;
+    background-image: linear-gradient(-45deg,
+        #93a3ae 25%, transparent 25%,
+        transparent 50%, #93a3ae 50%,
+        #93a3ae 75%, transparent 75%, transparent);
+    opacity: 0.5;
+    background-size: 4px 4px;
+    margin: 4px 0;
+}
 div.activityBlock > ul.activityModifiers {
     list-style-type: none;
-    margin-top: 4px;
+    margin-top: 12px;
     padding: 0;
-    border-top: 2px solid rgba(255, 255, 255, 0.3);
 }
 div.activityBlock > ul.activityModifiers > li {
     display: inline-block;
     font-family: 'bender', 'Segoe UI', 'Helvetica', sans-serif;
     font-weight: bold;
-    text-transform: uppercase;
-    font-size: 11px;
-    margin: 8px 8px 0 0;
-    padding: 2px 4px;
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    background-color: rgb(39, 58, 65, 0.5);
-    border-radius: 3px;
+    font-size: 12px;
+    margin: 0 16px 0 0;
     color: white;
+    height: 20px;
+}
+div.activityBlock > ul.activityModifiers > li > img {
+    width: 20px;
+    height: 20px;
+    margin-right: 6px;
+}
+div.activityBlock > ul.activityModifiers > li > p {
+    float: right;
+    line-height: 20px;
 }
 
 p.footer {
