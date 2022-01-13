@@ -1,6 +1,7 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
 module.exports = {
     entry: path.resolve(__dirname, 'src', 'index.tsx'),
@@ -29,7 +30,8 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             template: path.resolve(__dirname, 'src', 'index.html')
-        })
+        }),
+        new ForkTsCheckerWebpackPlugin()
     ],
     optimization: {
         minimizer: [
