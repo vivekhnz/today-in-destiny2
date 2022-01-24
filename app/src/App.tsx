@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react'
+import styled from 'styled-components'
+import { colors, fonts, GlobalStyles } from './GlobalStyles';
+import Header from './Header';
+import Footer from './Footer';
+import ActivityCategory from './ActivityCategory';
 import ActivityBlock from './ActivityBlock';
 import { CurrentActivities, DailyActivities, RaidChallengeEntry, WeeklyActivities } from './activities';
-import "./styles.css";
 
 interface Props {
     dataSourceUri: string
@@ -27,34 +31,32 @@ const App: React.FC<Props> = props => {
         fetchData();
     }, []);
 
-    const year = new Date().getFullYear();
-    const app = (
+    return (
         <>
-            <div className='header'>
-                <div className='headerContent'>
-                    <div className='headerLogo'></div>
-                    <h1 className='appTitle'>
-                        <span className='line1'>Today in</span>
-                        <br />
-                        <span className='line2'>Destiny 2</span>
-                    </h1>
-                </div>
-            </div>
-            <div className='container'>
-                {loadingState && <p className='loading'>{loadingState}</p>}
+            <GlobalStyles />
+            <Header />
+            <Container>
+                {loadingState && <Loading>{loadingState}</Loading>}
                 {renderDailyActivities(currentActivities.dailyActivities)}
                 {renderWeeklyActivities(currentActivities.weeklyActivities)}
-                <p className='footer'>
-                    <span className='line1'>&copy; {year} Vivek Hari</span><br />
-                    <span className='line2'>Not affiliated with Bungie</span>
-                </p>
-            </div>
+                <Footer />
+            </Container>
         </>
     )
-    return app
 }
-
 export default App
+
+const Container = styled.div`
+    max-width: 1300px;
+    padding: 0 12px;
+    margin: 0px auto;
+`
+
+const Loading = styled.p`
+    margin-top: 24px;
+    ${fonts.bender.bold}
+    color: ${colors.primary};
+`
 
 function renderDailyActivities(activities: DailyActivities) {
     const activityInfos: any[] = [
@@ -64,16 +66,14 @@ function renderDailyActivities(activities: DailyActivities) {
         return <></>
     }
 
-    return <>
-        <h2 className='categoryHeader'>Today</h2>
-        <div className='categorySeparator'></div>
-        <div className='activityGrid'>
+    return (
+        <ActivityCategory name='Today'>
             {activities.vanguardStrikes && <ActivityBlock key='vanguardStrikes'
                 type='Daily Modifiers' name='Vanguard Strikes'
                 imageUrl={activities.vanguardStrikes.imageUrl}
                 modifiers={activities.vanguardStrikes.modifiers} />}
-        </div>
-    </>
+        </ActivityCategory>
+    );
 }
 
 function renderWeeklyActivities(activities: WeeklyActivities) {
@@ -98,10 +98,8 @@ function renderWeeklyActivities(activities: WeeklyActivities) {
             type={`${name} Challenge`} name={entry.challengeName} imageUrl={entry.imageUrl} />
     }
 
-    return <>
-        <h2 className='categoryHeader'>This Week</h2>
-        <div className='categorySeparator'></div>
-        <div className='activityGrid'>
+    return (
+        <ActivityCategory name='This Week'>
             {activities.nightfall && <ActivityBlock key='nightfall'
                 type='Nightfall Strike' name={activities.nightfall.activityName}
                 imageUrl={activities.nightfall.imageUrl} />}
@@ -118,6 +116,6 @@ function renderWeeklyActivities(activities: WeeklyActivities) {
                 <ActivityBlock key={`nightmareHunt.${nightmareHunt.activityName}`}
                     type='Nightmare Hunt' name={nightmareHunt.activityName}
                     imageUrl={nightmareHunt.imageUrl} />)}
-        </div>
-    </>
+        </ActivityCategory>
+    );
 }

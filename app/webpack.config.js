@@ -16,11 +16,16 @@ module.exports = {
                 use: 'babel-loader'
             },
             {
-                test: /\.css$/,
-                use: [
-                    'style-loader',
-                    'css-loader'
-                ]
+                test: /\.png$/,
+                type: 'asset/resource'
+            },
+            {
+                test: /\.inline\.png$/,
+                type: 'asset/inline'
+            },
+            {
+                test: /\.woff2?$/,
+                type: 'asset/resource'
             }
         ]
     },
