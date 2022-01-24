@@ -142,7 +142,7 @@ public static class RefreshCurrentActivitiesFunction
             ["Clash"] = new ulong[] { 540869524 },
             ["Showdown"] = new ulong[] { 142028034, 1151331757, 1457072306 },
             ["Team Scorched"] = new ulong[] { 1219083526, 3787302650 },
-            ["Mayhem"] = new ulong[] { 903584917, 1102379070, 1312786953, 3847433434 },
+            ["Mayhem"] = new ulong[] { 3847433434 },
             ["Momentum Control"] = new ulong[] { 935998519 }
         };
 
